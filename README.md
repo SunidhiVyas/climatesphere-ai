@@ -7,6 +7,8 @@ A full-stack web app that analyses historical weather for a chosen region, detec
 The project was built from a static design brief and aims to show *honest* results: it never invents
 values, it states uncertainty plainly, and it degrades gracefully when a data source is unavailable.
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/SunidhiVyas/climatesphere-ai)
+
 ---
 
 ## Table of contents
@@ -389,22 +391,39 @@ Frontend tests render each page against fixture JSON with WebGL/canvas/Leaflet s
 
 ## Deployment
 
-**Database:** MongoDB Atlas M0 → copy the connection string.
+The repository ships a **Render Blueprint** (`render.yaml`) that deploys the whole stack at once:
 
-**API — Render** (`render.yaml` blueprint) or **Cloud Run** using `backend/Dockerfile`. Set:
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/SunidhiVyas/climatesphere-ai)
+
+It creates two free services:
+
+| Service | Type | URL | Notes |
+|---|---|---|---|
+| `climatesphere-api` | Docker web service | `https://climatesphere-api.onrender.com` | FastAPI + Uvicorn from `backend/Dockerfile`; health check `/api/health`. |
+| `climatesphere-web` | Static site | `https://climatesphere-web.onrender.com` | Vite build of `frontend/`; `VITE_API_BASE` already points at the API. |
+
+**During the Blueprint import Render asks for two optional secrets:**
 
 ```text
-MONGO_URI       = mongodb+srv://...        (secret)
-ALLOW_MOCK_DB   = 0
-TRUST_PROXY     = 1
-CORS_ORIGINS    = https://<your-frontend-url>
-ANTHROPIC_API_KEY = (optional)
+MONGO_URI         = mongodb+srv://...   (MongoDB Atlas M0; leave blank to run on the in-memory store)
+ANTHROPIC_API_KEY = sk-ant-...          (optional; enables LLM-narrated insights)
 ```
 
-**Frontend — Vercel / Netlify:** root `frontend`, build `npm run build`, output `dist`, env
-`VITE_API_BASE=<API URL>`. The app uses `HashRouter`, so no rewrite rules are needed.
+Everything else — `ALLOW_MOCK_DB=1`, `TRUST_PROXY=1`, `CORS_ORIGINS`, `VITE_API_BASE` — is pre-set, so
+the two services are wired to each other. If Render appends a suffix to a service name (name already
+taken), update `CORS_ORIGINS` on the API and `VITE_API_BASE` on the web service to the matching URLs.
 
-**Docker (self-host everything):** `docker compose up --build`.
+**Database — MongoDB Atlas M0 (free):** create a cluster, add a database user, and allow access from
+anywhere (`0.0.0.0/0`, since Render's egress IPs are not static); paste the connection string as
+`MONGO_URI`. Without it the app runs on an in-memory store and persists nothing.
+
+**Other targets**
+
+- **API** — any Docker host (Cloud Run, Fly.io, Railway) via `backend/Dockerfile`; set
+  `MONGO_URI`, `ALLOW_MOCK_DB`, `TRUST_PROXY`, `CORS_ORIGINS`, optional `ANTHROPIC_API_KEY`.
+- **Frontend** — Vercel / Netlify: root `frontend`, build `npm run build`, output `dist`, env
+  `VITE_API_BASE=<API URL>`. The app uses `HashRouter`, so no rewrite rules are needed.
+- **Self-host everything** — `docker compose up --build`.
 
 ---
 
