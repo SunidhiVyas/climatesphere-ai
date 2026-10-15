@@ -1,0 +1,15 @@
+# Render blueprint for the API (free web service). Create a free MongoDB Atlas cluster and paste its URI as MONGO_URI.
+services:
+  - type: web
+    name: climatesphere-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - { key: MONGO_URI, sync: false }
+      - { key: ALLOW_MOCK_DB, value: "0" }
+      - { key: TRUST_PROXY, value: "1" }
+      - { key: CORS_ORIGINS, sync: false }      # e.g. https://your-app.vercel.app
+      - { key: ANTHROPIC_API_KEY, sync: false }
