@@ -3,6 +3,11 @@ import { CircleMarker, MapContainer, Rectangle, TileLayer, useMap, useMapEvents 
 import 'leaflet/dist/leaflet.css'
 import { api } from '../api'
 
+const TILE_URL = import.meta.env.VITE_TILE_URL ||
+  'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+const TILE_ATTR = import.meta.env.VITE_TILE_ATTRIBUTION ||
+  'Tiles &copy; <a href="https://www.esri.com/">Esri</a> &mdash; Esri, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+
 /** City / place search backed by /api/region (Open-Meteo geocoding, cached in MongoDB). */
 export function PlaceSearch({ onPick, placeholder = 'Search a city, region or country…' }) {
   const [q, setQ] = useState('')
@@ -84,8 +89,7 @@ export default function RegionPicker({ region, onChange }) {
       </div>
       <div className="mapbox">
         <MapContainer center={[region.lat, region.lon]} zoom={4} minZoom={2} worldCopyJump style={{ height: '100%', width: '100%' }} attributionControl>
-          <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" subdomains="abcd" maxZoom={12}
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>' />
+          <TileLayer url={TILE_URL} subdomains="abcd" maxZoom={12} attribution={TILE_ATTR} />
           <Clicks onClick={click} />
           <View region={region} />
           {region.bbox

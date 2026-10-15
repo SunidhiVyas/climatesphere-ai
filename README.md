@@ -483,7 +483,7 @@ key is set.
 
 Open-Meteo (CC BY 4.0; free for non-commercial use — see their terms) · Copernicus ERA5 / CAMS ·
 World Bank Open Data (CC BY 4.0) · Natural Earth via `world-atlas` (public domain) ·
-map tiles © OpenStreetMap contributors, © CARTO.
+map basemap tiles © Esri (World Dark Gray Canvas).
 
 ---
 
