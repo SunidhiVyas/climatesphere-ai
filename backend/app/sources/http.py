@@ -26,7 +26,7 @@ ALLOWED_HOSTS = {
     "air-quality-api.open-meteo.com",
     "climate-api.open-meteo.com",
     "api.worldbank.org",
-    "api.anthropic.com",
+    "generativelanguage.googleapis.com",
 }
 MAX_BYTES = 30 * 1024 * 1024
 

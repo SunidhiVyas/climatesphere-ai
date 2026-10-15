@@ -11,6 +11,6 @@ services:
       MONGO_URI: mongodb://mongo:27017
       ALLOW_MOCK_DB: "0"            # fail loudly instead of silently using an in-memory DB
       CORS_ORIGINS: http://localhost:5173
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     depends_on: { mongo: { condition: service_healthy } }
 volumes: { mongo-data: {} }

@@ -160,23 +160,28 @@ def _rule_based(facts: dict) -> str:
 
 def insights(facts: dict) -> dict:
     s = get_settings()
-    key = "ins:" + hashlib.sha1(json.dumps(facts, sort_keys=True, default=str).encode()).hexdigest() + (s.anthropic_model if s.anthropic_api_key else "rb")
+    key = "ins:" + hashlib.sha1(json.dumps(facts, sort_keys=True, default=str).encode()).hexdigest() + (s.gemini_model if s.gemini_api_key else "rb")
     c = cache_get(key)
     if c:
         return c
-    text, model = _rule_based(facts), "rule-based (set ANTHROPIC_API_KEY for LLM narration)"
-    if s.anthropic_api_key:
+    rule_based = "rule-based (set GEMINI_API_KEY for LLM narration)"
+    text, model = _rule_based(facts), rule_based
+    if s.gemini_api_key:
         try:
-            j = http.fetch_json("https://api.anthropic.com/v1/messages", method="POST", retries=1,
-                                headers={"x-api-key": s.anthropic_api_key, "anthropic-version": "2023-06-01"},
-                                json_body={"model": s.anthropic_model, "max_tokens": 400, "system": SYSTEM,
-                                           "messages": [{"role": "user", "content": json.dumps(facts, default=str)}]})
-            t = "".join(b.get("text", "") for b in j.get("content", []) if b.get("type") == "text").strip()
+            j = http.fetch_json(f"https://generativelanguage.googleapis.com/v1beta/models/{s.gemini_model}:generateContent",
+                                method="POST", retries=1,
+                                headers={"x-goog-api-key": s.gemini_api_key},
+                                json_body={"systemInstruction": {"parts": [{"text": SYSTEM}]},
+                                           "contents": [{"role": "user", "parts": [{"text": json.dumps(facts, default=str)}]}],
+                                           "generationConfig": {"maxOutputTokens": 600, "temperature": 0.2,
+                                                                "thinkingConfig": {"thinkingBudget": 0}}})
+            t = "".join(p.get("text", "") for cnd in j.get("candidates", [])
+                        for p in cnd.get("content", {}).get("parts", []) if p.get("text")).strip()
             if t:
-                text, model = t, s.anthropic_model
+                text, model = t, s.gemini_model
         except http.UpstreamError:
             pass  # silently keep the rule-based text; never fail the request because the LLM is down
-    out = {"text": text, "model": model, "source": "Computed from this app's own analysis", "generated": model != "rule-based (set ANTHROPIC_API_KEY for LLM narration)",
+    out = {"text": text, "model": model, "source": "Computed from this app's own analysis", "generated": model != rule_based,
            "facts_used": {"historical": facts["historical"]["headline"], "projection": bool(facts.get("projection"))}}
     cache_set(key, out, 12 * 3600)
     return out

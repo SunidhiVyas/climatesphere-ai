@@ -88,7 +88,7 @@ React (HashRouter)  ──/api──►  FastAPI  ──► services ──► M
  Trends/AI Lab/Reports         │  security headers           analyses       (computed results, 1 doc / query)
                                │                             api_cache      (geocode, layers, projections…)
                                │                             subscribers / community
-                               └─► sources/http.py ─► Open-Meteo · World Bank · (Anthropic, optional)
+                               └─► sources/http.py ─► Open-Meteo · World Bank · (Gemini, optional)
                                    allow-list, timeouts, retries, outbound rate limit
 ```
 
@@ -109,7 +109,7 @@ MongoDB** and return JSON (+ `meta.cache: hit|miss`). Overlapping requests (e.g.
 | Database | MongoDB (PyMongo); mongomock as an in-memory dev fallback |
 | Exports | matplotlib (PNG plot), ReportLab (PDF), built-in CSV |
 | Data | Open-Meteo (ERA5 archive, geocoding, CMIP6 Climate, CAMS Air Quality, Forecast), World Bank Open Data |
-| Optional AI | Anthropic Claude API for narrative insights (rule-based fallback when no key) |
+| Optional AI | Google Gemini API for narrative insights (rule-based fallback when no key) |
 | Tests | pytest (backend), Vitest + Testing Library (frontend) |
 | Deploy | Docker / Docker Compose, Render (`render.yaml`), any static host (Vercel/Netlify) |
 
@@ -208,8 +208,8 @@ Copy `.env.example` and edit locally. **Never commit real values.**
 | `UPSTREAM_PER_MIN` | `300` | Global outbound-call cap to third-party APIs. |
 | `WEATHER_TTL_DAYS` | `90` | TTL for cached raw weather years. |
 | `ANALYSIS_TTL_DAYS` | `14` | TTL for cached computed analyses. |
-| `ANTHROPIC_API_KEY` | *(empty)* | Optional; enables LLM narration (rule-based text otherwise). |
-| `ANTHROPIC_MODEL` | `claude-sonnet-5-5` | Model used for narration. |
+| `GEMINI_API_KEY` | *(empty)* | Optional; enables LLM narration (rule-based text otherwise). |
+| `GEMINI_MODEL` | `gemini-2.5-flash` | Model used for narration. |
 | `CLIMATE_MODELS` | `EC_Earth3P_HR,MRI_AGCM3_2_S,MPI_ESM1_2_XR` | CMIP6 models used for projections. |
 | `MONGO_TIMEOUT_MS` | `3000` | Server-selection timeout (used for the mock-DB fallback). |
 | `VITE_API_BASE` | *(empty)* | Frontend: backend base URL in production (e.g. `https://your-api.onrender.com`). |
@@ -296,7 +296,7 @@ contract documented in the comments of `design-reference/index.html`.
 | Open-Meteo **Air Quality API** | PM2.5, PM10, dust, AOD | CAMS composition forecasts. |
 | Open-Meteo **Forecast API** | Live global layer grid | Current conditions sampled on a 10° grid, cached 6 h. |
 | World Bank **WDI** | Global climate-action indicators | Renewable share, forest area, CO₂ per person. |
-| Anthropic **Claude** *(optional)* | Narrative insights | Constrained to computed numbers; rule-based fallback when unset. |
+| Google **Gemini** *(optional)* | Narrative insights | Constrained to computed numbers; rule-based fallback when unset. |
 
 ---
 
@@ -406,7 +406,7 @@ It creates two free services:
 
 ```text
 MONGO_URI         = mongodb+srv://...   (MongoDB Atlas M0; leave blank to run on the in-memory store)
-ANTHROPIC_API_KEY = sk-ant-...          (optional; enables LLM-narrated insights)
+GEMINI_API_KEY    = AIza...             (optional; enables LLM-narrated insights)
 ```
 
 Everything else — `ALLOW_MOCK_DB=1`, `TRUST_PROXY=1`, `CORS_ORIGINS`, `VITE_API_BASE` — is pre-set, so
@@ -420,7 +420,7 @@ anywhere (`0.0.0.0/0`, since Render's egress IPs are not static); paste the conn
 **Other targets**
 
 - **API** — any Docker host (Cloud Run, Fly.io, Railway) via `backend/Dockerfile`; set
-  `MONGO_URI`, `ALLOW_MOCK_DB`, `TRUST_PROXY`, `CORS_ORIGINS`, optional `ANTHROPIC_API_KEY`.
+  `MONGO_URI`, `ALLOW_MOCK_DB`, `TRUST_PROXY`, `CORS_ORIGINS`, optional `GEMINI_API_KEY`.
 - **Frontend** — Vercel / Netlify: root `frontend`, build `npm run build`, output `dist`, env
   `VITE_API_BASE=<API URL>`. The app uses `HashRouter`, so no rewrite rules are needed.
 - **Self-host everything** — `docker compose up --build`.
@@ -449,7 +449,7 @@ Please read before judging the numbers:
 
 - Backend logic, API, caching, validation, rate limiting and exports are covered by automated tests that
   use **synthetic upstream responses**.
-- The Open-Meteo / World Bank / Anthropic integrations were written from their public documentation but
+- The Open-Meteo / World Bank / Gemini integrations were written from their public documentation but
   were **not exercised against the live services** in the environment this was generated in (no outbound
   access). The first real run may need small adjustments (e.g. the CMIP6 model names in
   `CLIMATE_MODELS`, World Bank indicator codes in `sources/worldbank.py`).
@@ -473,7 +473,7 @@ everything they produced:
 - **opencode** — used as a **coding/debugging agent** to investigate and fix runtime errors (for example,
   an upstream rate-limit failure that broke the Explore page's live data layer).
 
-The running app can optionally call Claude at runtime to narrate insights (`ANTHROPIC_API_KEY`); the
+The running app can optionally call Google Gemini at runtime to narrate insights (`GEMINI_API_KEY`); the
 text is constrained to the computed numbers, and a deterministic rule-based narrative is used when no
 key is set.
 

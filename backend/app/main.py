@@ -416,7 +416,7 @@ def health():
         },
         "llm": (
             "configured"
-            if get_settings().anthropic_api_key
+            if get_settings().gemini_api_key
             else "not configured"
         ),
         "last_complete_year": last_complete_year(),

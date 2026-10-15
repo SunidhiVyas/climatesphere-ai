@@ -28,7 +28,7 @@ services:
         value: "1"          # Render terminates TLS in front of the app
       - key: CORS_ORIGINS
         value: https://climatesphere-web.onrender.com
-      - key: ANTHROPIC_API_KEY
+      - key: GEMINI_API_KEY
         sync: false         # optional: enables LLM-narrated insights
 
   # ------------------------------------------------------------- frontend (SPA)

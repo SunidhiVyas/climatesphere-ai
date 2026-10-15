@@ -36,8 +36,8 @@ class Settings:
     upstream_per_minute: int     # outbound calls / minute to third-party APIs (global, all users)
     weather_ttl_days: int        # how long cached raw weather years stay valid
     analysis_ttl_days: int       # how long computed analyses stay valid
-    anthropic_api_key: str
-    anthropic_model: str
+    gemini_api_key: str
+    gemini_model: str
     climate_models: str          # Open-Meteo Climate API (CMIP6) models used for projections
 
 
@@ -55,8 +55,8 @@ def get_settings() -> Settings:
         upstream_per_minute=_int("UPSTREAM_PER_MIN", 300),
         weather_ttl_days=_int("WEATHER_TTL_DAYS", 90),
         analysis_ttl_days=_int("ANALYSIS_TTL_DAYS", 14),
-        anthropic_api_key=os.getenv("ANTHROPIC_API_KEY", "").strip(),
-        anthropic_model=os.getenv("ANTHROPIC_MODEL", "claude-sonnet-5-5").strip(),
+        gemini_api_key=os.getenv("GEMINI_API_KEY", "").strip(),
+        gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip(),
         climate_models=os.getenv("CLIMATE_MODELS", "EC_Earth3P_HR,MRI_AGCM3_2_S,MPI_ESM1_2_XR").strip(),
     )
 
